@@ -30,7 +30,6 @@ typedef struct _sPreviousValues {
 
 class AppleiSubEngine;
 
-
 class AppleDBDMAAudioDMAEngine : public IOAudioEngine
 {
     OSDeclareDefaultStructors(AppleDBDMAAudioDMAEngine)
@@ -63,11 +62,13 @@ protected:
 	
     UInt32	fBadCmd;
     UInt32	fBadResult;
-    
+    bool	fNeedsPhaseInversion;
+	bool	fNeedsRightChanMixed;
+
     IOAudioStreamDirection	direction;
 
     virtual bool filterInterrupt(int index);
-    
+
     static bool interruptFilter(OSObject *owner, IOFilterInterruptEventSource *source);
     static void interruptHandler(OSObject *owner, IOInterruptEventSource *source, int count);
     static bool	iSubEnginePublished (AppleDBDMAAudioDMAEngine * dbdmaEngineObject, void * refCon, IOService * newService);
@@ -77,7 +78,7 @@ protected:
 public:
     virtual bool init(OSDictionary 			*properties,
                       IOService 			*theDeviceProvider,
-                      bool				hasInput,
+                      bool					hasInput,
                       UInt32				numBlocks = DBDMAAUDIODMAENGINE_DEFAULT_NUM_BLOCKS,
                       UInt32				blockSize = DBDMAAUDIODMAENGINE_DEFAULT_BLOCK_SIZE,
                       UInt32				rate = DBDMAAUDIODMAENGINE_DEFAULT_SAMPLE_RATE,
@@ -93,20 +94,23 @@ public:
     virtual IOReturn performAudioEngineStop();
     
     IOReturn     restartOutputIfFailure();
-    
+
+    inline void  setPhaseInversion(bool needsPhaseInversion ) { fNeedsPhaseInversion = needsPhaseInversion; }; 
+    inline bool  getPhaseInversion() { return fNeedsPhaseInversion; };
+
+    inline void  setRightChanMixed(bool needsRightChanMixed ) { fNeedsRightChanMixed = needsRightChanMixed; }; 
+    inline bool  getRightChanMixed() { return fNeedsRightChanMixed; };
+
     virtual UInt32 getCurrentSampleFrame();
 	virtual void resetClipPosition (IOAudioStream *audioStream, UInt32 clipSampleFrame);
-    virtual IOReturn clipOutputSamples(const void *mixBuf, void *sampleBuf, UInt32 firstSampleFrame, 
-                UInt32 numSampleFrames, const IOAudioStreamFormat *streamFormat, IOAudioStream *audioStream);
-    virtual IOReturn convertInputSamples(const void *sampleBuf, void *destBuf, UInt32 firstSampleFrame, 
-                UInt32 numSampleFrames, const IOAudioStreamFormat *streamFormat, IOAudioStream *audioStream);
+    virtual IOReturn clipOutputSamples(const void *mixBuf, void *sampleBuf, UInt32 firstSampleFrame, UInt32 numSampleFrames, const IOAudioStreamFormat *streamFormat, IOAudioStream *audioStream);
+    virtual IOReturn convertInputSamples(const void *sampleBuf, void *destBuf, UInt32 firstSampleFrame, UInt32 numSampleFrames, const IOAudioStreamFormat *streamFormat, IOAudioStream *audioStream);
 
-    virtual IOReturn performFormatChange(IOAudioStream *audioStream, const IOAudioStreamFormat *newFormat, 
-                const IOAudioSampleRate *newSampleRate);
+    virtual IOReturn performFormatChange(IOAudioStream *audioStream, const IOAudioStreamFormat *newFormat, const IOAudioSampleRate *newSampleRate);
     
     static const int kDBDMADeviceIndex;
     static const int kDBDMAOutputIndex;
     static const int kDBDMAInputIndex;
-
 };
+
 #endif /* _APPLEDBDMAAUDIODMAENGINE_H */
